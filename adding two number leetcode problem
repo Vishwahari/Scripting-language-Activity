@@ -1,0 +1,57 @@
+# Definition for a singly-linked list node.
+class ListNode
+  attr_accessor :val, :next
+  def initialize(val = 0, _next = nil)
+    @val = val
+    @next = _next
+  end
+end
+
+# Function to add two numbers represented as linked lists.
+def add_two_numbers(l1, l2)
+  dummy = ListNode.new(0)
+  current = dummy
+  carry = 0
+
+  while l1 || l2 || carry > 0
+    x = l1 ? l1.val : 0
+    y = l2 ? l2.val : 0
+
+    sum = x + y + carry
+    carry = sum / 10
+    current.next = ListNode.new(sum % 10)
+
+    current = current.next
+    l1 = l1.next if l1
+    l2 = l2.next if l2
+  end
+
+  dummy.next
+end
+
+# Helper function to create a linked list from an array
+def create_linked_list(arr)
+  dummy = ListNode.new(0)
+  current = dummy
+  arr.each do |val|
+    current.next = ListNode.new(val)
+    current = current.next
+  end
+  dummy.next
+end
+
+# Helper function to convert a linked list to an array
+def linked_list_to_array(node)
+  result = []
+  while node
+    result << node.val
+    node = node.next
+  end
+  result
+end
+
+# Example usage:
+l1 = create_linked_list([2, 4, 3])
+l2 = create_linked_list([5, 6, 4])
+result = add_two_numbers(l1, l2)
+puts linked_list_to_array(result).inspect  # Output: [7, 0, 8]
