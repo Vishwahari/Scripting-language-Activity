@@ -1,0 +1,44 @@
+import asyncio
+from hypercorn.config import Config
+from hypercorn.asyncio import serve
+from quart import Quart
+from aioquic.asyncio import QuicServer
+from aioquic.quic.configuration import QuicConfiguration
+from aioquic.asyncio.web import Http3Server
+
+# Common Web Application for HTTP/2 and HTTP/3
+app = Quart(__name__)
+
+@app.route("/")
+async def index():
+    return "Hello from HTTP/2 and HTTP/3 Server!"
+
+# Run HTTP/2 Server
+async def run_http2_server():
+    config = Config()
+    config.bind = ["0.0.0.0:8000"]  # HTTP/2 runs on port 8000
+    config.alpn_protocols = ["h2"]
+    print("Starting HTTP/2 server on https://0.0.0.0:8000")
+    await serve(app, config)
+
+# Run HTTP/3 Server
+async def run_http3_server():
+    quic_config = QuicConfiguration(is_client=False)
+    quic_config.alpn_protocols = ["h3"]
+    quic_config.load_cert_chain("cert.pem", "key.pem")  # Provide SSL cert and key
+
+    server = await QuicServer.create(
+        ("0.0.0.0", 8001),  # HTTP/3 runs on port 8001
+        configuration=quic_config,
+        create_protocol=Http3Server,
+    )
+    print("Starting HTTP/3 server on https://0.0.0.0:8001")
+    await server.wait_closed()
+
+# Main Entry Point
+if __name__ == "__main__":
+    try:
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(asyncio.gather(run_http2_server(), run_http3_server()))
+    except KeyboardInterrupt:
+        print("Servers stopped.")
